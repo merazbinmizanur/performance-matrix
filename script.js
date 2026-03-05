@@ -1,3 +1,24 @@
+
+const CURRENT_APP_VERSION = "1.0.0"; // যখন আপডেট করবেন, এই সংখ্যাটি পরিবর্তন করবেন
+
+function checkAppVersion() {
+    const savedVersion = localStorage.getItem('slc_app_version');
+    
+    if (savedVersion !== CURRENT_APP_VERSION) {
+        // নতুন ভার্সন পাওয়া গেছে
+        console.log(`Updating App: ${savedVersion} -> ${CURRENT_APP_VERSION}`);
+        
+        // নতুন ভার্সন সেভ করা হচ্ছে
+        localStorage.setItem('slc_app_version', CURRENT_APP_VERSION);
+        
+        // ফোর্স রিলোড (ক্যাশ ক্লিয়ার সহ)
+        if (savedVersion) { // প্রথমবার লোড হলে রিলোড হবে না, শুধুমাত্র আপডেট হলে হবে
+            window.location.reload(true);
+        }
+    }
+}
+checkAppVersion();
+
 // --- 1. FIREBASE CONFIGURATION ---
 const firebaseConfig = {
     apiKey: "AIzaSyA5NT48twuSMxm9QN8267fiMxzZjpJttTo",
@@ -181,9 +202,16 @@ function listenData() {
     db.collection("players").onSnapshot(snap => {
         state.players = snap.docs.map(d => d.data());
         
-        if (!state.isAdmin) {
-            state.currentUser = state.players.find(p => p.id === localStorage.getItem('slc_user'));
-        }
+if (!state.isAdmin) {
+    const currentUserId = localStorage.getItem('slc_user');
+    state.currentUser = state.players.find(p => p.id === currentUserId);
+
+    if (currentUserId && !state.currentUser) {
+        localStorage.removeItem('slc_user');
+        location.reload();
+        return;
+    }
+}
         
         // --- Header Name & Avatar Update Logic ---
         const nameBadge = document.getElementById('user-name-badge');
@@ -233,10 +261,10 @@ function listenData() {
     });
 }
 
-function calcLeaderboard(filterId, type) { // type: 'month' or 'week'
+function calcLeaderboard(filterId, type, skipStars = false) { 
     let stats = {};
     state.players.forEach(p => {
-        stats[p.id] = { ...p, mp:0, w:0, d:0, l:0, gs:0, gc:0, gd:0, pts:0 };
+        stats[p.id] = { ...p, mp:0, w:0, d:0, l:0, gs:0, gc:0, gd:0, pts:0, stars:0 }; // stars:0 যুক্ত হলো
     });
 
     state.matches.forEach(m => {
@@ -257,6 +285,35 @@ function calcLeaderboard(filterId, type) { // type: 'month' or 'week'
         else if(s2 > s1) { p2.w++; p2.pts+=3; p1.l++; }
         else { p1.d++; p2.d++; p1.pts+=1; p2.pts+=1; }
     });
+
+    // NEW: Weekly Winner Star System (Only for Monthly Matrix)
+    if (type === 'month' && !skipStars) {
+        let weeksInMonth = new Set();
+        state.matches.forEach(m => {
+            if(m.status === 'played' && m.playedAt) {
+                if (filterId === 'all' || getMonthId(m.playedAt) === filterId) {
+                    weeksInMonth.add(getWeekId(m.playedAt));
+                }
+            }
+        });
+        
+const currentWeekId = getWeekId(Date.now()); // বর্তমানে চলমান সপ্তাহের ID বের করা
+
+weeksInMonth.forEach(wId => {
+    // চেক করা হচ্ছে সপ্তাহটি শেষ হয়েছে কি না (বর্তমান সপ্তাহের আইডি থেকে ছোট/আগের আইডি হলে)
+    if (wId < currentWeekId) {
+        // ওই নির্দিষ্ট সপ্তাহের উইনার কে ছিল সেটা বের করা হচ্ছে
+        let wStats = calcLeaderboard(wId, 'week', true);
+        if (wStats.length > 0) {
+            let winnerId = wStats[0].id;
+            if (stats[winnerId]) {
+                stats[winnerId].stars += 1; // উইনার একটি স্টার পাবে
+                stats[winnerId].pts += 10; // ১ স্টার = ১০ পয়েন্ট যোগ
+            }
+        }
+    }
+});
+    }
 
     // Calc GD and Sort: PTS -> GD -> GS -> W
     let arr = Object.values(stats).map(s => { s.gd = s.gs - s.gc; return s; });
@@ -524,6 +581,14 @@ async function createMatch() {
     if(!p1Id || !p2Id) return notify("Select both players", "alert-circle");
     if(p1Id === p2Id) return notify("Cannot play against yourself", "alert-triangle");
 
+    // NEW CHECK: Prevent creating matches for others if not admin
+    if (!state.isAdmin) {
+        const myId = localStorage.getItem('slc_user');
+        if (p1Id !== myId && p2Id !== myId) {
+            return notify("You can only create matches for yourself!", "lock");
+        }
+    }
+
     // Rule: Max 5 Matches
     const existing = state.matches.filter(m => 
         (m.p1Id===p1Id && m.p2Id===p2Id) || (m.p1Id===p2Id && m.p2Id===p1Id)
@@ -543,12 +608,12 @@ async function createMatch() {
             p1Avatar: p1.avatar, p2Avatar: p2.avatar,
             scoreP1: null, scoreP2: null,
             status: 'pending', timestamp: Date.now()
-});
+        });
 
-copyToClipboard(id);
-resetPlayerSelection('p1');
-resetPlayerSelection('p2');
-lucide.createIcons();
+        copyToClipboard(id);
+        resetPlayerSelection('p1');
+        resetPlayerSelection('p2');
+        lucide.createIcons();
     } catch(e) { notify("Error", "x"); }
     finally { btn.innerText = "Generate Match ID"; btn.disabled = false; }
 }
@@ -847,6 +912,9 @@ const getPodiumStep = (p, rank, heightClass) => {
                     <div class="absolute inset-0 bg-gradient-to-b ${gradientBg} z-0"></div>
                     
                     <span class="text-[8px] font-black ${nameColor} uppercase truncate w-full text-center mt-1 z-10 px-1 drop-shadow-md shrink-0">${p.name}</span>
+                    
+                    ${type === 'month' && p.stars > 0 ? `<div class="flex items-center justify-center gap-[1px] mt-0.5 z-10">${Array(p.stars).fill('<i data-lucide="star" class="w-2.5 h-2.5 text-gold-400 fill-gold-400 drop-shadow-md"></i>').join('')}</div>` : ''}
+
 <span class="text-xl font-black ${ptsColor} leading-none mt-1.5 z-10 drop-shadow-md shrink-0">${p.pts}</span>
 <span class="text-[5.5px] text-slate-400 font-bold uppercase mt-1 z-10 tracking-[0.2em] shrink-0">${medalText}</span>
                 </div>
@@ -864,15 +932,18 @@ podiumEl.innerHTML = `
 // আইকন লোড করার জন্য এটি যোগ করা জরুরি (Crown আইকনের জন্য)
 setTimeout(() => { lucide.createIcons(); }, 10);
 
-    // Table Rendering (Starts at 4th)
-    ranked.slice(3).forEach((p, i) => {
-        tableEl.innerHTML += `
+// Table Rendering (Starts at 4th)
+ranked.slice(3).forEach((p, i) => {
+            tableEl.innerHTML += `
         <tr class="hover:bg-white/5 transition-colors">
             <td class="p-3 text-[10px] font-black text-slate-600 text-center">${i+4}</td>
             <td class="p-3">
                 <div class="flex items-center gap-2">
                     ${getAvatarUI(p, "w-6", "h-6")}
-                    <span class="text-[9px] font-bold text-white uppercase truncate max-w-[80px]">${p.name}</span>
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-bold text-white uppercase truncate max-w-[80px]">${p.name}</span>
+                        ${type === 'month' && p.stars > 0 ? `<div class="flex items-center justify-start gap-[1px] mt-0.5">${Array(p.stars).fill('<i data-lucide="star" class="w-2.5 h-2.5 text-gold-400 fill-gold-400"></i>').join('')}</div>` : ''}
+                    </div>
                 </div>
             </td>
             <td class="p-3 text-[10px] font-bold text-slate-400 text-center">${p.mp}</td>
