@@ -98,12 +98,23 @@
         <span class="text-[7px] font-bold text-emerald-400 leading-none tracking-[0.2em] uppercase">Chronicles</span>
     </div>
 </div>
-                <div class="hud-module hud-side pointer-events-auto justify-end">
-                    <div class="flex flex-col items-end">
-                        <span id="user-id-badge" class="text-[10px] font-black text-emerald-400 leading-none tracking-widest">ID: ---</span>
-                        <span class="text-[6px] font-bold text-slate-500 uppercase tracking-widest mt-1">Player Matrix</span>
-                    </div>
-                </div>
+<div class="hud-module hud-side pointer-events-auto justify-end">
+    <!-- Right Side Player Box -->
+    <div class="bg-slate-900/80 border border-white/5 pl-3 pr-1.5 py-1.5 flex items-center rounded-[1rem] shadow-lg backdrop-blur-md">
+        <!-- ID and Name -->
+        <div class="flex flex-col items-end pr-3 border-r border-white/10">
+            <span id="user-id-badge" class="text-[9px] font-black text-emerald-400 leading-none tracking-widest mb-1 truncate max-w-[100px]">ID: ---</span>
+            <span id="user-name-badge" class="text-[6px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[100px]">Player Matrix</span>
+        </div>
+        <!-- User Icon -->
+<!-- User Icon -->
+<div id="header-user-avatar" class="ml-2.5 flex-shrink-0">
+    <div class="w-8 h-8 rounded-lg bg-slate-950 border border-emerald-500/30 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+        <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i>
+    </div>
+</div>
+    </div>
+</div>
             </div>
         </header>
 
@@ -112,37 +123,144 @@
             
             <!-- 1. HOME VIEW -->
             <section id="view-home" class="absolute inset-0 p-6 overflow-y-auto custom-scrollbar pb-32">
-                <div class="w-full max-w-[340px] mx-auto text-center mb-8 animate-pop-in">
-                    <h1 class="text-3xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg">Welcome to<br><span class="text-emerald-500">The Matrix</span></h1>
-                    <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-2 font-bold">1v1 Infinite Warfare</p>
-                </div>
+<div class="w-full max-w-[340px] mx-auto text-center mb-10 mt-2 animate-pop-in relative">
+    <!-- Background Neon Glow Effect -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-emerald-500/20 rounded-full blur-[40px] -z-10 pointer-events-none"></div>
+    
+    <!-- Main Title with Gradient & Glow -->
+    <h1 class="text-3xl font-black uppercase italic flex flex-col items-center leading-none mb-4 tracking-tighter">
+        <span class="text-white drop-shadow-md mb-1">WELCOME TO</span>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-300 drop-shadow-[0_0_15px_rgba(16,185,129,0.4)] text-[2.5rem] filter">THE MATRIX</span>
+    </h1>
+    
+    <!-- Subtitle Tech Badge -->
+    <div class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-slate-900/80 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)] relative overflow-hidden group">
+        <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></div>
+        <p class="text-[9px] text-emerald-50 font-black uppercase tracking-[0.3em] relative z-10">SLC PERFORMANCE MATRIX</p>
+        <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></div>
+    </div>
+    
+    <!-- Decorative Tech Line -->
+    <div class="flex items-center justify-center gap-3 mt-5 opacity-60">
+        <div class="h-[1px] w-16 bg-gradient-to-r from-transparent to-slate-600"></div>
+        <i data-lucide="crosshair" class="w-3.5 h-3.5 text-emerald-500"></i>
+        <div class="h-[1px] w-16 bg-gradient-to-l from-transparent to-slate-600"></div>
+    </div>
+</div>
                 
-                <div class="grid grid-cols-2 gap-4 max-w-[340px] mx-auto mb-8">
-                    <div class="moving-border p-[1px] rounded-[1.6rem] shadow-xl">
-                        <div class="bg-slate-900 p-5 rounded-[1.5rem] text-center h-full">
-                            <i data-lucide="users" class="w-6 h-6 text-blue-400 mx-auto mb-2"></i>
-                            <p class="text-[8px] text-slate-500 font-black uppercase mb-1">Total Players</p>
-                            <p id="stat-total-players" class="text-xl font-black text-white">0</p>
-                        </div>
-                    </div>
-                    <div class="moving-border p-[1px] rounded-[1.6rem] shadow-xl">
-                        <div class="bg-slate-900 p-5 rounded-[1.5rem] text-center h-full">
-                            <i data-lucide="swords" class="w-6 h-6 text-rose-400 mx-auto mb-2"></i>
-                            <p class="text-[8px] text-slate-500 font-black uppercase mb-1">Matches Played</p>
-                            <p id="stat-total-matches" class="text-xl font-black text-white">0</p>
-                        </div>
-                    </div>
+<div class="grid grid-cols-2 gap-4 max-w-[340px] mx-auto mb-8">
+    <!-- Box 1: Total Players -->
+    <div class="moving-border p-[1px] rounded-[1.6rem] shadow-xl hover:-translate-y-1 transition-transform">
+        <div class="bg-slate-900 p-5 rounded-[1.5rem] text-center h-full">
+            <i data-lucide="users" class="w-6 h-6 text-blue-400 mx-auto mb-2"></i>
+            <p class="text-[8px] text-slate-500 font-black uppercase mb-1">Total Players</p>
+            <p id="stat-total-players" class="text-xl font-black text-white drop-shadow-md">0</p>
+        </div>
+    </div>
+    
+    <!-- Box 2: Matches Played -->
+    <div class="moving-border p-[1px] rounded-[1.6rem] shadow-xl hover:-translate-y-1 transition-transform">
+        <div class="bg-slate-900 p-5 rounded-[1.5rem] text-center h-full">
+            <i data-lucide="swords" class="w-6 h-6 text-rose-400 mx-auto mb-2"></i>
+            <p class="text-[8px] text-slate-500 font-black uppercase mb-1">Matches Played</p>
+            <p id="stat-total-matches" class="text-xl font-black text-white drop-shadow-md">0</p>
+        </div>
+    </div>
+    
+    <!-- Box 3: Total Goals (নতুন) -->
+    <div class="moving-border-gold p-[1px] rounded-[1.6rem] shadow-xl hover:-translate-y-1 transition-transform">
+        <div class="bg-slate-900 p-5 rounded-[1.5rem] text-center h-full">
+            <i data-lucide="target" class="w-6 h-6 text-gold-400 mx-auto mb-2 drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]"></i>
+            <p class="text-[8px] text-slate-500 font-black uppercase mb-1">Total Goals</p>
+            <p id="stat-total-goals" class="text-xl font-black text-gold-400 drop-shadow-md">0</p>
+        </div>
+    </div>
+    
+    <!-- Box 4: Active Battles (নতুন) -->
+    <div class="moving-border-emerald p-[1px] rounded-[1.6rem] shadow-xl hover:-translate-y-1 transition-transform">
+        <div class="bg-slate-900 p-5 rounded-[1.5rem] text-center h-full">
+            <i data-lucide="zap" class="w-6 h-6 text-emerald-400 mx-auto mb-2 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]"></i>
+            <p class="text-[8px] text-slate-500 font-black uppercase mb-1">Active Battles</p>
+            <p id="stat-active-battles" class="text-xl font-black text-emerald-400 drop-shadow-md">0</p>
+        </div>
+    </div>
+</div>
+<div class="max-w-[340px] mx-auto moving-border-gold p-[1.5px] rounded-[1.6rem] shadow-xl">
+    <div class="bg-slate-900 p-6 rounded-[1.5rem] relative overflow-hidden">
+        <!-- Background Decoration Icon -->
+        <i data-lucide="shield-alert" class="absolute -top-4 -right-4 w-28 h-28 text-gold-500/5 rotate-12"></i>
+        
+        <!-- Header -->
+        <div class="flex items-center gap-3 mb-5 border-b border-white/5 pb-4 relative z-10">
+            <div class="bg-gold-500/10 p-2.5 rounded-xl border border-gold-500/20 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                <i data-lucide="gavel" class="w-5 h-5 text-gold-500"></i>
+            </div>
+            <div>
+                <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Rules of Engagement</h3>
+                <p class="text-[7px] text-gold-400/70 font-bold uppercase tracking-widest mt-0.5">Official Protocol Guidelines</p>
+            </div>
+        </div>
+        
+        <!-- Rules List -->
+        <ul class="space-y-4 text-left relative z-10">
+            <!-- Rule 1: Match Limits -->
+            <li class="flex items-start gap-3 bg-slate-950/40 p-3 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors">
+                <div class="bg-blue-500/10 p-1.5 rounded-lg shrink-0 border border-blue-500/20">
+                    <i data-lucide="swords" class="w-3.5 h-3.5 text-blue-400"></i>
                 </div>
-
-                <div class="max-w-[340px] mx-auto moving-border-gold p-[1px] rounded-[1.6rem] shadow-xl">
-                    <div class="bg-slate-900 p-6 rounded-[1.5rem] text-center">
-                        <i data-lucide="trophy" class="w-8 h-8 text-gold-500 mx-auto mb-3"></i>
-                        <h3 class="text-sm font-black text-white uppercase tracking-widest mb-2">Rules of Engagement</h3>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase leading-relaxed text-justify">
-                            Challenge any registered player. You can play a maximum of <span class="text-emerald-400 font-black">5 Matches</span> against the exact same opponent. Win = 3 Pts, Draw = 1 Pt. Rankings reset Weekly & Monthly.
-                        </p>
-                    </div>
+                <div>
+                    <span class="text-[9px] font-black text-white uppercase tracking-widest block mb-1">Match Limits</span>
+                    <p class="text-[8px] text-slate-400 font-semibold leading-relaxed">You can play a maximum of <span class="text-blue-400 font-black">5 Matches</span> against the exact same opponent per ranking cycle.</p>
                 </div>
+            </li>
+            
+            <!-- Rule 2: Scoring Protocol -->
+            <li class="flex items-start gap-3 bg-slate-950/40 p-3 rounded-xl border border-white/5 hover:border-emerald-500/30 transition-colors">
+                <div class="bg-emerald-500/10 p-1.5 rounded-lg shrink-0 border border-emerald-500/20">
+                    <i data-lucide="calculator" class="w-3.5 h-3.5 text-emerald-400"></i>
+                </div>
+                <div>
+                    <span class="text-[9px] font-black text-white uppercase tracking-widest block mb-1">Scoring Protocol</span>
+                    <p class="text-[8px] text-slate-400 font-semibold leading-relaxed">Victory = <span class="text-emerald-400 font-black">3 PTS</span> &nbsp;&bull;&nbsp; Draw = <span class="text-gold-400 font-black">1 PT</span> &nbsp;&bull;&nbsp; Defeat = <span class="text-rose-500 font-black">0 PTS</span></p>
+                </div>
+            </li>
+            
+            <!-- Rule 3: Ranking Algorithm -->
+            <li class="flex items-start gap-3 bg-slate-950/40 p-3 rounded-xl border border-white/5 hover:border-gold-500/30 transition-colors">
+                <div class="bg-gold-500/10 p-1.5 rounded-lg shrink-0 border border-gold-500/20">
+                    <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-gold-500"></i>
+                </div>
+                <div>
+                    <span class="text-[9px] font-black text-white uppercase tracking-widest block mb-1">Ranking Algorithm</span>
+                    <p class="text-[8px] text-slate-400 font-semibold leading-relaxed">Leaderboard standings prioritize: <span class="text-white">Points &rarr; Goal Diff (GD) &rarr; Goals Scored &rarr; Wins</span>.</p>
+                </div>
+            </li>
+            
+            <!-- Rule 4: Matrix Cycles -->
+            <li class="flex items-start gap-3 bg-slate-950/40 p-3 rounded-xl border border-white/5 hover:border-rose-500/30 transition-colors">
+                <div class="bg-rose-500/10 p-1.5 rounded-lg shrink-0 border border-rose-500/20">
+                    <i data-lucide="history" class="w-3.5 h-3.5 text-rose-400"></i>
+                </div>
+                <div>
+                    <span class="text-[9px] font-black text-white uppercase tracking-widest block mb-1">Matrix Cycles</span>
+                    <p class="text-[8px] text-slate-400 font-semibold leading-relaxed">Competitive leaderboards and stats automatically reset at the end of every <span class="text-rose-400 font-black">Week</span> and <span class="text-rose-400 font-black">Month</span>.</p>
+                </div>
+            </li>
+            
+            <!-- Rule 5: Verification -->
+            <li class="flex items-start gap-3 bg-slate-950/40 p-3 rounded-xl border border-white/5 hover:border-slate-300/30 transition-colors">
+                <div class="bg-slate-700/30 p-1.5 rounded-lg shrink-0 border border-slate-500/30">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-300"></i>
+                </div>
+                <div>
+                    <span class="text-[9px] font-black text-white uppercase tracking-widest block mb-1">Result Verification</span>
+                    <p class="text-[8px] text-slate-400 font-semibold leading-relaxed">Your <span class="text-white">Secret Matrix ID</span> is strictly required to submit and verify final match scores.</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
             </section>
 
             <!-- 2. MATCHES VIEW -->
@@ -156,7 +274,7 @@
                             
                             <div class="space-y-4">
 <!-- Player 1 Custom Dropdown -->
-<div class="relative w-full text-left" id="custom-select-p1">
+<div class="relative w-full text-left mb-4" id="custom-select-p1">
     <label class="text-[8px] text-slate-500 font-black uppercase tracking-widest ml-2 block mb-1">Player 1 (Home)</label>
     <button type="button" onclick="toggleDropdown('p1')" class="w-full p-4 rounded-xl bg-slate-950 border border-white/5 focus:border-blue-500 flex items-center justify-between transition-colors shadow-inner cursor-pointer">
         <div class="flex items-center gap-3" id="display-p1">
@@ -166,8 +284,9 @@
         <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500"></i>
     </button>
     
-    <div id="dropdown-p1" class="hidden absolute z-50 w-full mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8)] overflow-hidden moving-border-blue p-[1.5px]">
-        <div class="bg-slate-900 rounded-[1.4rem] h-full flex flex-col max-h-[260px]">
+    <!-- FIX: Removed 'absolute z-50' to create an accordion effect instead of floating -->
+    <div id="dropdown-p1" class="hidden w-full mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-lg overflow-hidden moving-border-blue p-[1.5px]">
+        <div class="bg-slate-900 rounded-[1.4rem] h-full flex flex-col max-h-[190px]">
             <div class="p-3 border-b border-white/5 sticky top-0 bg-slate-900 z-10">
                 <div class="relative">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
@@ -180,7 +299,16 @@
     <input type="hidden" id="match-p1" value="">
 </div>
 
-<div class="text-center my-1"><span class="text-[10px] font-black text-slate-600 italic">VS</span></div>
+<div class="flex items-center justify-center w-full my-5 relative">
+    <!-- Fading Line -->
+    <div class="h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent absolute z-0"></div>
+    
+    <!-- Glowing Diamond VS Badge -->
+    <div class="w-8 h-8 bg-slate-950 border border-white/10 rounded-xl rotate-45 flex items-center justify-center z-10 shadow-[0_0_20px_rgba(0,0,0,0.6)] relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+        <span class="text-[9px] font-black text-slate-300 italic -rotate-45 tracking-[0.15em] drop-shadow-md">VS</span>
+    </div>
+</div>
 
 <!-- Player 2 Custom Dropdown -->
 <div class="relative w-full text-left" id="custom-select-p2">
@@ -193,8 +321,9 @@
         <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500"></i>
     </button>
     
-    <div id="dropdown-p2" class="hidden absolute z-50 w-full mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8)] overflow-hidden moving-border-rose p-[1.5px]">
-        <div class="bg-slate-900 rounded-[1.4rem] h-full flex flex-col max-h-[260px]">
+    <!-- FIX: Removed 'absolute z-50' to create an accordion effect instead of floating -->
+    <div id="dropdown-p2" class="hidden w-full mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-lg overflow-hidden moving-border-rose p-[1.5px]">
+        <div class="bg-slate-900 rounded-[1.4rem] h-full flex flex-col max-h-[190px]">
             <div class="p-3 border-b border-white/5 sticky top-0 bg-slate-900 z-10">
                 <div class="relative">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
@@ -205,18 +334,38 @@
         </div>
     </div>
     <input type="hidden" id="match-p2" value="">
+    
 </div>
+
                                 <button onclick="createMatch()" id="btn-create-match" class="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all mt-2">Generate Match ID</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Recent Matches -->
-                    <div class="flex items-center justify-between mb-4 mt-8">
-                        <h2 class="text-xs font-black text-slate-500 uppercase tracking-widest italic">Recent Matches</h2>
-                    </div>
-                    <div id="recent-matches-list" class="space-y-3"></div>
-                </div>
+<!-- Smart Search Bar -->
+<div class="relative mb-6 mt-8">
+    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+    <input type="text" id="search-match-input" onkeyup="searchMatches()" placeholder="Search Match ID or Player Name..." class="w-full pl-11 pr-4 py-3.5 bg-slate-900 border border-white/5 rounded-2xl text-[10px] text-white font-black outline-none focus:border-blue-500 placeholder-slate-600 uppercase tracking-widest shadow-inner transition-all">
+</div>
+
+<!-- Incomplete Matches Section -->
+<div id="incomplete-section" class="mb-8 hidden">
+    <div class="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
+        <h2 class="text-xs font-black text-blue-500 uppercase tracking-widest italic flex items-center gap-2">
+            <i data-lucide="clock" class="w-4 h-4"></i> Incomplete Matches
+        </h2>
+    </div>
+    <div id="incomplete-matches-list" class="space-y-3"></div>
+</div>
+
+<!-- Recent Matches Section -->
+<div class="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
+    <h2 class="text-xs font-black text-emerald-500 uppercase tracking-widest italic flex items-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4"></i> Completed Matches
+    </h2>
+</div>
+<div id="recent-matches-list" class="space-y-3"></div>
             </section>
 
             <!-- 3. MONTHLY RANKING VIEW -->
@@ -224,9 +373,19 @@
                 <div class="w-full max-w-[340px] mx-auto animate-pop-in">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-[11px] font-black text-gold-500 uppercase tracking-widest italic">Monthly Matrix</h2>
-                        <select id="monthly-filter" onchange="renderMonthlyRanking()" class="bg-slate-900 border border-white/10 text-[8px] font-black text-white uppercase rounded-lg px-2 py-1 outline-none"></select>
+<div class="relative">
+    <input type="hidden" id="monthly-filter" value="">
+    <button onclick="openFilterModal('month')" class="flex items-center gap-1.5 bg-slate-900/80 border border-gold-500/30 text-[9px] font-black text-gold-400 uppercase rounded-xl px-3 py-2 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:bg-slate-800 transition-all active:scale-95">
+        <span id="monthly-filter-text">CURRENT MONTH</span>
+        <i data-lucide="chevron-down" class="w-3 h-3 text-gold-500"></i>
+    </button>
+</div>
                     </div>
-                    
+                    <!-- Monthly Countdown -->
+<div id="monthly-countdown-container" class="bg-slate-900/40 border border-white/5 rounded-xl p-3 mb-2 flex flex-col items-center justify-center moving-border-gold shadow-lg">
+    <span class="text-[7px] text-slate-400 font-black uppercase tracking-[0.2em] mb-1"><i data-lucide="timer" class="w-3 h-3 inline mr-1 mb-0.5 text-gold-500"></i> Next Month Starts In</span>
+    <div id="monthly-timer" class="text-sm font-black text-gold-400 tracking-widest drop-shadow-md">--:--:--:--</div>
+</div>
                     <!-- Podium -->
                     <div id="monthly-podium" class="flex items-end justify-center gap-2 h-48 mb-8 mt-6"></div>
                     
@@ -256,9 +415,19 @@
                 <div class="w-full max-w-[340px] mx-auto animate-pop-in">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-[11px] font-black text-emerald-500 uppercase tracking-widest italic">Weekly Matrix</h2>
-                        <select id="weekly-filter" onchange="renderWeeklyRanking()" class="bg-slate-900 border border-white/10 text-[8px] font-black text-white uppercase rounded-lg px-2 py-1 outline-none"></select>
+<div class="relative">
+    <input type="hidden" id="weekly-filter" value="">
+    <button onclick="openFilterModal('week')" class="flex items-center gap-1.5 bg-slate-900/80 border border-emerald-500/30 text-[9px] font-black text-emerald-400 uppercase rounded-xl px-3 py-2 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-slate-800 transition-all active:scale-95">
+        <span id="weekly-filter-text">CURRENT WEEK</span>
+        <i data-lucide="chevron-down" class="w-3 h-3 text-emerald-500"></i>
+    </button>
+</div>
                     </div>
-                    
+                    <!-- Weekly Countdown -->
+<div id="weekly-countdown-container" class="bg-slate-900/40 border border-white/5 rounded-xl p-3 mb-2 flex flex-col items-center justify-center moving-border-emerald shadow-lg">
+    <span class="text-[7px] text-slate-400 font-black uppercase tracking-[0.2em] mb-1"><i data-lucide="timer" class="w-3 h-3 inline mr-1 mb-0.5 text-emerald-500"></i> Next Week Starts In</span>
+    <div id="weekly-timer" class="text-sm font-black text-emerald-400 tracking-widest drop-shadow-md">--:--:--:--</div>
+</div>
                     <!-- Podium -->
                     <div id="weekly-podium" class="flex items-end justify-center gap-2 h-48 mb-8 mt-6"></div>
                     
@@ -339,19 +508,21 @@
                 <h3 class="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-6">Submit Result</h3>
                 <p id="res-match-id-display" class="text-[8px] text-slate-500 font-bold mb-4 uppercase"></p>
                 
-                <div class="flex items-center justify-between gap-4 mb-6">
-                    <div class="flex-1 text-center">
-                        <div id="res-p1-avatar" class="mx-auto mb-2"></div>
-                        <p id="res-p1-name" class="text-[9px] font-bold text-white truncate uppercase mb-2"></p>
-                        <input type="number" id="res-s-p1" placeholder="0" class="w-full p-3 bg-slate-950 border border-white/10 rounded-xl text-center text-2xl font-black text-white outline-none focus:border-emerald-500">
-                    </div>
-                    <div class="text-slate-600 font-black italic text-xl">VS</div>
-                    <div class="flex-1 text-center">
-                        <div id="res-p2-avatar" class="mx-auto mb-2"></div>
-                        <p id="res-p2-name" class="text-[9px] font-bold text-white truncate uppercase mb-2"></p>
-                        <input type="number" id="res-s-p2" placeholder="0" class="w-full p-3 bg-slate-950 border border-white/10 rounded-xl text-center text-2xl font-black text-white outline-none focus:border-emerald-500">
-                    </div>
-                </div>
+<div class="flex items-center justify-between gap-4 mb-6">
+    <div class="flex-1 text-center">
+        <!-- mx-auto এর বদলে flex justify-center ব্যবহার করা হয়েছে -->
+        <div id="res-p1-avatar" class="flex justify-center mb-2"></div>
+        <p id="res-p1-name" class="text-[9px] font-bold text-white truncate uppercase mb-2"></p>
+        <input type="number" id="res-s-p1" placeholder="0" class="w-full p-3 bg-slate-950 border border-white/10 rounded-xl text-center text-2xl font-black text-white outline-none focus:border-emerald-500">
+    </div>
+    <div class="text-slate-600 font-black italic text-xl">VS</div>
+    <div class="flex-1 text-center">
+        <!-- mx-auto এর বদলে flex justify-center ব্যবহার করা হয়েছে -->
+        <div id="res-p2-avatar" class="flex justify-center mb-2"></div>
+        <p id="res-p2-name" class="text-[9px] font-bold text-white truncate uppercase mb-2"></p>
+        <input type="number" id="res-s-p2" placeholder="0" class="w-full p-3 bg-slate-950 border border-white/10 rounded-xl text-center text-2xl font-black text-white outline-none focus:border-emerald-500">
+    </div>
+</div>
 
                 <div class="mb-6">
                     <label class="block text-[8px] font-black text-slate-500 uppercase mb-2 tracking-widest">Verification ID (Required)</label>
@@ -403,6 +574,21 @@
             </div>
         </div>
     </div>
+    
+    <!-- Custom Filter Bottom Sheet Modal -->
+<div id="modal-filter-sheet" class="fixed inset-0 z-[1200] bg-slate-950/80 hidden flex-col justify-end backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeFilterModal(true)">
+    <div id="filter-sheet-content" class="bg-slate-900 w-full max-w-md mx-auto rounded-t-[2.5rem] border-t border-white/10 shadow-[0_-10px_50px_rgba(0,0,0,0.8)] transform translate-y-full transition-transform duration-300 ease-out relative" onclick="event.stopPropagation()">
+        <div class="p-6 pb-10">
+            <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-6 cursor-pointer" onclick="closeFilterModal(true)"></div>
+            <h3 id="filter-sheet-title" class="text-[10px] font-black text-white uppercase tracking-[0.3em] text-center mb-6 italic flex items-center justify-center gap-2">
+                <!-- Title Injected via JS -->
+            </h3>
+            <div id="filter-sheet-options" class="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
+                <!-- Options injected via JS -->
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- Firebase SDK (Compat version for Vanilla JS) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
