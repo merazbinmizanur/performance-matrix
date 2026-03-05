@@ -177,14 +177,56 @@ function initApp() {
 // --- 4. DATA SYNC & PROCESSING ---
 
 function listenData() {
-    // Listen Players
+    // 1. Listen Players Data
     db.collection("players").onSnapshot(snap => {
         state.players = snap.docs.map(d => d.data());
-        if(!state.isAdmin) state.currentUser = state.players.find(p => p.id === localStorage.getItem('slc_user'));
+        
+        if (!state.isAdmin) {
+            state.currentUser = state.players.find(p => p.id === localStorage.getItem('slc_user'));
+        }
+        
+        // --- Header Name & Avatar Update Logic ---
+        const nameBadge = document.getElementById('user-name-badge');
+        const avatarContainer = document.getElementById('header-user-avatar');
+        
+        if (nameBadge) {
+            nameBadge.classList.remove('text-slate-400', 'text-white', 'text-gold-400');
+            
+            if (state.isAdmin) {
+                // অ্যাডমিন হলে
+                nameBadge.innerText = 'SYSTEM ADMIN';
+                nameBadge.classList.add('text-gold-400');
+                if (avatarContainer) {
+                    avatarContainer.innerHTML = `<div class="w-8 h-8 rounded-lg bg-slate-950 border border-gold-500/30 flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.15)]"><i data-lucide="shield-check" class="w-4 h-4 text-gold-400"></i></div>`;
+                }
+            } else if (state.currentUser) {
+                // সাধারণ প্লেয়ার হলে
+                nameBadge.innerText = state.currentUser.name;
+                nameBadge.classList.add('text-white');
+                
+                if (avatarContainer) {
+                    if (state.currentUser.avatar) {
+                        // যদি ছবি থাকে
+                        avatarContainer.innerHTML = `
+                            <img src="${state.currentUser.avatar}" class="w-8 h-8 rounded-lg object-cover border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                            <div class="w-8 h-8 rounded-lg bg-slate-950 border border-emerald-500/30 hidden items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.15)]"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>
+                        `;
+                    } else {
+                        // যদি ছবি না থাকে (ডিফল্ট আইকন)
+                        avatarContainer.innerHTML = `<div class="w-8 h-8 rounded-lg bg-slate-950 border border-emerald-500/30 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.15)]"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>`;
+                    }
+                }
+            } else {
+                nameBadge.innerText = 'PLAYER MATRIX';
+                nameBadge.classList.add('text-slate-400');
+            }
+            lucide.createIcons(); // আইকনগুলো রেন্ডার করার জন্য
+        }
+        
         refreshUI();
     });
-
-    // Listen Matches
+    
+    // 2. Listen Matches Data
     db.collection("matches").onSnapshot(snap => {
         state.matches = snap.docs.map(d => d.data());
         refreshUI();
@@ -276,8 +318,25 @@ function refreshUI() {
 }
 
 function renderHome() {
+    // ম্যাচ ফিল্টার করা
+    const playedMatches = state.matches.filter(m => m.status === 'played');
+    const pendingMatches = state.matches.filter(m => m.status === 'pending');
+    
+    // মোট গোল হিসাব করা
+    let totalGoals = 0;
+    playedMatches.forEach(m => {
+        totalGoals += (m.scoreP1 || 0) + (m.scoreP2 || 0);
+    });
+    
+    // ডাটা ড্যাশবোর্ডে সেট করা
     document.getElementById('stat-total-players').innerText = state.players.length;
-    document.getElementById('stat-total-matches').innerText = state.matches.filter(m=>m.status==='played').length;
+    document.getElementById('stat-total-matches').innerText = playedMatches.length;
+    
+    const goalsEl = document.getElementById('stat-total-goals');
+    const battlesEl = document.getElementById('stat-active-battles');
+    
+    if (goalsEl) goalsEl.innerText = totalGoals;
+    if (battlesEl) battlesEl.innerText = pendingMatches.length;
 }
 
 // --- MATCHES MODULE ---
@@ -316,21 +375,72 @@ function renderMatchesView() {
     if(val1) { const pt = state.players.find(x=>x.id===val1); if(pt) selectPlayer('p1', pt.id, pt.name, pt.avatar, true); }
     if(val2) { const pt = state.players.find(x=>x.id===val2); if(pt) selectPlayer('p2', pt.id, pt.name, pt.avatar, true); }
 
-    const list = document.getElementById('recent-matches-list');
-    list.innerHTML = '';
+// Search bar clear & trigger list render
+const searchInput = document.getElementById('search-match-input');
+if (searchInput) searchInput.value = '';
+searchMatches();
+}
+
+// --- MATCH SEARCH FUNCTIONALITY ---
+// --- MATCH SEARCH FUNCTIONALITY ---
+function searchMatches() {
+    const searchInput = document.getElementById('search-match-input');
+    if (!searchInput) return;
+    const query = searchInput.value.toLowerCase().trim();
     
-    let sorted = [...state.matches].sort((a,b) => {
-        if(a.status==='pending' && b.status==='played') return -1;
-        if(a.status==='played' && b.status==='pending') return 1;
-        return (b.playedAt || b.timestamp) - (a.playedAt || a.timestamp);
-    });
-
-    const display = sorted.slice(0, 5);
-    display.forEach(m => list.appendChild(createMatchCard(m)));
-
-    if(sorted.length > 5) {
-        list.innerHTML += `<button onclick="switchTab('all-matches')" class="w-full py-3 bg-white/5 border border-white/5 text-slate-400 text-[10px] font-black rounded-xl uppercase tracking-widest hover:bg-white/10 mt-2">View All (${sorted.length})</button>`;
+    const incompleteList = document.getElementById('incomplete-matches-list');
+    const recentList = document.getElementById('recent-matches-list');
+    const incompleteSection = document.getElementById('incomplete-section');
+    
+    if (incompleteList) incompleteList.innerHTML = '';
+    if (recentList) recentList.innerHTML = '';
+    
+    // Split matches into pending and played
+    let pendingMatches = state.matches.filter(m => m.status === 'pending')
+        .sort((a, b) => b.timestamp - a.timestamp);
+    
+    let playedMatches = state.matches.filter(m => m.status === 'played')
+        .sort((a, b) => (b.playedAt || b.timestamp) - (a.playedAt || a.timestamp));
+    
+    // Filter logic: Search by ID or Player Names
+    if (query) {
+        const matchQuery = m =>
+            m.id.toLowerCase().includes(query) ||
+            m.p1Name.toLowerCase().includes(query) ||
+            m.p2Name.toLowerCase().includes(query);
+        
+        pendingMatches = pendingMatches.filter(matchQuery);
+        playedMatches = playedMatches.filter(matchQuery);
     }
+    
+    // Display Incomplete (Pending) Matches
+    if (incompleteList && incompleteSection) {
+        if (pendingMatches.length === 0) {
+            incompleteSection.classList.add('hidden');
+        } else {
+            incompleteSection.classList.remove('hidden');
+            pendingMatches.forEach(m => incompleteList.appendChild(createMatchCard(m)));
+        }
+    }
+    
+    // Display Recent (Played) Matches
+    if (recentList) {
+        const displayLimit = query ? playedMatches.length : 5;
+        const displayPlayed = playedMatches.slice(0, displayLimit);
+        
+        if (displayPlayed.length === 0) {
+            recentList.innerHTML = `<p class="text-center text-[10px] text-slate-600 uppercase font-black py-4 border border-dashed border-white/10 rounded-2xl mt-2">No completed matches found</p>`;
+        } else {
+            displayPlayed.forEach(m => recentList.appendChild(createMatchCard(m)));
+        }
+        
+        // Show View All button if not searching and has more than 5 completed matches
+        if (!query && playedMatches.length > 5) {
+            recentList.insertAdjacentHTML('beforeend', `<button onclick="switchTab('all-matches')" class="w-full py-3 bg-slate-900 border border-white/5 text-slate-400 text-[10px] font-black rounded-xl uppercase tracking-widest hover:bg-slate-800 shadow-md mt-2 transition-colors">View All Completed (${playedMatches.length})</button>`);
+        }
+    }
+    
+    lucide.createIcons();
 }
 
 function renderAllMatches() {
@@ -433,8 +543,9 @@ async function createMatch() {
             p1Avatar: p1.avatar, p2Avatar: p2.avatar,
             scoreP1: null, scoreP2: null,
             status: 'pending', timestamp: Date.now()
-        });
-        notify("Match Created!", "swords");
+});
+
+copyToClipboard(id);
 resetPlayerSelection('p1');
 resetPlayerSelection('p2');
 lucide.createIcons();
@@ -448,27 +559,27 @@ function createMatchCard(m) {
     
     // Container Classes
     div.className = `p-[1.5px] rounded-[1.6rem] relative ${isPlayed ? 'moving-border' : 'moving-border-blue animate-pulse-slow cursor-pointer'}`;
-    if(!isPlayed) div.onclick = () => openResultEntry(m.id);
-
-    // Inner Content
-    let scoreHtml = isPlayed 
-        ? `<span class="text-xl font-black text-emerald-400">${m.scoreP1} - ${m.scoreP2}</span>` 
-        : `<span class="text-[9px] font-black text-blue-400 bg-blue-500/10 px-2 py-1 rounded uppercase tracking-widest">Awaiting Result</span>`;
+    if (!isPlayed) div.onclick = () => openResultEntry(m.id);
     
-    let subHtml = isPlayed 
-        ? `<span class="text-[6px] text-slate-500 font-bold uppercase mt-1">Ver: ${m.submittedBy}</span>`
-        : `<span class="text-[6px] text-slate-500 font-bold uppercase mt-1">Tap to enter score</span>`;
-
+    // Inner Content
+let scoreHtml = isPlayed ?
+    `<span class="text-xl font-black text-emerald-400">${m.scoreP1} - ${m.scoreP2}</span>` :
+    `<span class="text-[9px] font-black text-blue-400 bg-blue-500/10 px-2 py-1 rounded uppercase tracking-widest whitespace-nowrap">Awaiting Result</span>`;
+    
+    let subHtml = isPlayed ?
+        `<span class="text-[6px] text-slate-500 font-bold uppercase mt-1">Ver: ${m.submittedBy}</span>` :
+        `<span class="text-[6px] text-slate-500 font-bold uppercase mt-1">Tap to enter score</span>`;
+    
     // Admin Controls
     let adminHtml = '';
-    if(state.isAdmin) {
+    if (state.isAdmin) {
         adminHtml = `
         <div class="absolute -top-2 -right-2 flex gap-1 z-20">
             ${isPlayed ? `<button onclick="event.stopPropagation(); openResultEntry('${m.id}')" class="p-1.5 bg-blue-600 rounded-lg text-white shadow"><i data-lucide="edit-2" class="w-3 h-3"></i></button>` : ''}
             <button onclick="event.stopPropagation(); deleteMatch('${m.id}')" class="p-1.5 bg-rose-600 rounded-lg text-white shadow"><i data-lucide="trash" class="w-3 h-3"></i></button>
         </div>`;
     }
-
+    
     div.innerHTML = `
         ${adminHtml}
         <div class="bg-slate-900 p-4 rounded-[1.5rem] flex items-center justify-between relative z-10 ${isPlayed?'opacity-80':''}">
@@ -479,7 +590,11 @@ function createMatchCard(m) {
             <div class="flex flex-col items-center flex-1 mx-2">
                 ${scoreHtml}
                 ${subHtml}
-                <span class="text-[5px] text-slate-600 mt-1 uppercase">${m.id}</span>
+                <!-- Tap to Copy ID Button -->
+                <div onclick="event.stopPropagation(); copyToClipboard('${m.id}')" class="flex items-center gap-1 mt-1.5 bg-white/5 border border-white/5 px-2 py-1 rounded-md cursor-pointer hover:bg-white/10 active:scale-95 transition-all group z-20">
+                    <span class="text-[7px] font-black text-slate-400 uppercase tracking-widest group-hover:text-emerald-400 transition-colors">${m.id}</span>
+                    <i data-lucide="copy" class="w-3 h-3 text-slate-500 group-hover:text-emerald-400 transition-colors"></i>
+                </div>
             </div>
             <div class="flex flex-col items-center w-[30%]">
                 ${getAvatarUI({avatar:m.p2Avatar, name:m.p2Name}, "w-8", "h-8")}
@@ -559,36 +674,123 @@ async function deleteMatch(id) {
 
 // --- 7. LEADERBOARDS ---
 
-function populatePeriods(type) {
-    const select = document.getElementById(`${type}ly-filter`);
+let currentFilterType = '';
+
+function getAvailablePeriods(type) {
     let periods = new Set();
     state.matches.forEach(m => {
-        if(m.status === 'played' && m.playedAt) {
+        if (m.status === 'played' && m.playedAt) {
             periods.add(type === 'month' ? getMonthId(m.playedAt) : getWeekId(m.playedAt));
         }
     });
-    
-    // Sort descending
     let pArr = Array.from(periods).sort().reverse();
     let currentId = type === 'month' ? getMonthId(Date.now()) : getWeekId(Date.now());
-    if(!pArr.includes(currentId)) pArr.unshift(currentId);
+    if (!pArr.includes(currentId)) pArr.unshift(currentId);
+    return { pArr, currentId };
+}
 
-    let html = `<option value="${currentId}">Current ${type}</option>`;
-    pArr.forEach(p => {
-        if(p !== currentId) html += `<option value="${p}">${type==='month'?getMonthName(p):getWeekName(p)}</option>`;
-    });
-    html += `<option value="all">All Time</option>`;
+function openFilterModal(type) {
+    currentFilterType = type;
+    const { pArr, currentId } = getAvailablePeriods(type);
     
-    // Only update if options changed to prevent resetting selection
-    if(select.innerHTML !== html) select.innerHTML = html;
+    const filterInput = document.getElementById(`${type}ly-filter`);
+    // যদি প্রথমবার হয়, ডিফল্ট ভ্যালু সেট করা
+    if (!filterInput.value) filterInput.value = currentId;
+    const currentSelected = filterInput.value;
+    
+    // থিম অনুযায়ী টাইটেল ও আইকন কালার
+    const titleColor = type === 'month' ? 'text-gold-400' : 'text-emerald-400';
+    document.getElementById('filter-sheet-title').innerHTML = `<i data-lucide="calendar" class="w-4 h-4 ${titleColor}"></i> <span class="${titleColor}">SELECT ${type.toUpperCase()}</span>`;
+    
+    const optionsContainer = document.getElementById('filter-sheet-options');
+    let html = '';
+    
+    // Current Option
+    html += createOptionHTML(currentId, `CURRENT ${type}`, currentSelected === currentId, type);
+    
+    // Past Options
+    pArr.forEach(p => {
+        if (p !== currentId) {
+            const label = type === 'month' ? getMonthName(p) : getWeekName(p);
+            html += createOptionHTML(p, label, currentSelected === p, type);
+        }
+    });
+    
+    // All Time Option
+    html += createOptionHTML('all', 'ALL TIME', currentSelected === 'all', type);
+    
+    optionsContainer.innerHTML = html;
+    lucide.createIcons();
+    
+    // Modal Animation On
+    const modal = document.getElementById('modal-filter-sheet');
+    const content = document.getElementById('filter-sheet-content');
+    modal.classList.remove('hidden');
+    // ছোট্ট ডিলের পর এনিমেশন ক্লাস যুক্ত করা
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('translate-y-full');
+    }, 10);
+}
+
+function createOptionHTML(value, label, isSelected, type) {
+    const activeBorder = type === 'month' ? 'border-gold-500 text-gold-400 bg-gold-500/10 shadow-[0_0_15px_rgba(245,158,11,0.15)]' : 'border-emerald-500 text-emerald-400 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]';
+    const inactiveBorder = 'border-white/5 text-slate-400 bg-slate-950 hover:bg-slate-800';
+    const checkIcon = isSelected ? `<i data-lucide="check-circle-2" class="w-5 h-5"></i>` : `<div class="w-5 h-5 rounded-full border border-slate-700"></div>`;
+    
+    return `
+    <div onclick="selectFilterOption('${value}', '${label}')" class="flex items-center justify-between p-4 rounded-[1.2rem] border ${isSelected ? activeBorder : inactiveBorder} cursor-pointer transition-all active:scale-95">
+        <span class="text-[10px] font-black uppercase tracking-widest">${label}</span>
+        ${checkIcon}
+    </div>`;
+}
+
+function selectFilterOption(value, label) {
+    const type = currentFilterType;
+    document.getElementById(`${type}ly-filter`).value = value;
+    document.getElementById(`${type}ly-filter-text`).innerText = label;
+    
+    closeFilterModal(true);
+    
+    if (type === 'month') renderMonthlyRanking();
+    else renderWeeklyRanking();
+}
+
+function closeFilterModal(force = false) {
+    if (force) {
+        const modal = document.getElementById('modal-filter-sheet');
+        const content = document.getElementById('filter-sheet-content');
+        
+        modal.classList.add('opacity-0');
+        content.classList.add('translate-y-full');
+        // এনিমেশন শেষ হওয়ার পর hidden করা
+        setTimeout(() => { modal.classList.add('hidden'); }, 300);
+    }
 }
 
 function renderLeaderboardView(type) {
-    populatePeriods(type);
-    const filter = document.getElementById(`${type}ly-filter`).value;
+    const filterInput = document.getElementById(`${type}ly-filter`);
+    
+    // প্রথমবার লোড হওয়ার সময় ডিফল্ট সেট করা
+    if (!filterInput.value) {
+        const defaultId = type === 'month' ? getMonthId(Date.now()) : getWeekId(Date.now());
+        filterInput.value = defaultId;
+        document.getElementById(`${type}ly-filter-text`).innerText = `CURRENT ${type}`;
+    }
+    
+    const filter = filterInput.value;
     const ranked = calcLeaderboard(filter, type);
     
     const podiumEl = document.getElementById(`${type}ly-podium`);
+const countdownContainer = document.getElementById(`${type}ly-countdown-container`);
+if (countdownContainer) {
+    const currentPeriodId = type === 'month' ? getMonthId(Date.now()) : getWeekId(Date.now());
+    if (filter === currentPeriodId || filter === 'all') {
+        countdownContainer.classList.remove('hidden');
+    } else {
+        countdownContainer.classList.add('hidden');
+    }
+}
     const tableEl = document.getElementById(`${type}ly-table-body`);
     podiumEl.innerHTML = ''; tableEl.innerHTML = '';
 
@@ -598,27 +800,69 @@ function renderLeaderboardView(type) {
     }
 
     // Podium Rendering
-    const top3 = ranked.slice(0, 3);
+    // Podium Rendering
+const top3 = ranked.slice(0, 3);
+
+const getPodiumStep = (p, rank, heightClass) => {
+    if (!p) return `<div class="w-[30%] ${heightClass} opacity-30"></div>`; // Empty placeholder
     
-    const getPodiumStep = (p, rankCls, htCls, badgeColor, medal) => {
-        if(!p) return `<div class="${rankCls} ${htCls} opacity-30"></div>`;
-        return `
-        <div class="${rankCls} ${htCls} flex flex-col items-center justify-start p-2 relative shadow-2xl">
-            <div class="absolute -top-6">${getAvatarUI(p, "w-12", "h-12")}</div>
-            <div class="mt-4 flex flex-col items-center">
-                <span class="text-[8px] font-black text-white uppercase truncate w-20 text-center">${p.name}</span>
-                <span class="text-xl font-black ${badgeColor} leading-none drop-shadow-lg">${p.pts}</span>
-                <span class="text-[6px] text-slate-400 font-bold uppercase mt-1">${medal}</span>
+    // র্যাঙ্ক অনুযায়ী ডিজাইন ভ্যারিয়েবল
+    let rankBadge, boxStyle, nameColor, ptsColor, movingBorderClass, gradientBg;
+    
+    if (rank === 1) {
+        rankBadge = `<div class="absolute -top-2 -right-2 bg-gold-500 text-slate-900 w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] shadow-[0_0_15px_rgba(245,158,11,0.6)] z-30 border border-white/20">1</div>`;
+        nameColor = 'text-gold-400';
+        ptsColor = 'text-gold-500';
+        movingBorderClass = 'moving-border-gold shadow-[0_0_30px_rgba(245,158,11,0.15)]';
+        gradientBg = 'from-gold-500/10 to-transparent';
+    } else if (rank === 2) {
+        rankBadge = `<div class="absolute -top-1 -right-1 bg-silver-400 text-slate-900 w-4 h-4 rounded-full flex items-center justify-center font-black text-[8px] shadow-[0_0_10px_rgba(148,163,184,0.6)] z-30 border border-white/20">2</div>`;
+        nameColor = 'text-white';
+        ptsColor = 'text-silver-400';
+        movingBorderClass = 'moving-border-silver shadow-xl';
+        gradientBg = 'from-silver-500/10 to-transparent';
+    } else {
+        rankBadge = `<div class="absolute -top-1 -right-1 bg-bronze-400 text-white w-4 h-4 rounded-full flex items-center justify-center font-black text-[8px] shadow-[0_0_10px_rgba(180,83,9,0.6)] z-30 border border-white/20">3</div>`;
+        nameColor = 'text-white';
+        ptsColor = 'text-bronze-400';
+        movingBorderClass = 'moving-border-bronze shadow-xl';
+        gradientBg = 'from-bronze-500/10 to-transparent';
+    }
+    
+    const avatarSize = rank === 1 ? "w-14 h-14" : "w-11 h-11";
+    const medalText = rank === 1 ? "CHAMPION" : (rank === 2 ? "2ND PLACE" : "3RD PLACE");
+    const crown = rank === 1 ? `<i data-lucide="crown" class="w-5 h-5 text-gold-500 absolute -top-5 left-1/2 -translate-x-1/2 drop-shadow-[0_0_5px_rgba(245,158,11,0.8)] z-40"></i>` : '';
+    
+    return `
+        <div class="flex flex-col items-center justify-end w-[32%] relative transition-transform hover:-translate-y-1 duration-300">
+            <div class="relative z-30 translate-y-5">
+                ${crown}
+                ${rankBadge}
+                <div class="rounded-full p-[3px] bg-slate-950 shadow-2xl relative z-20">
+                    ${getAvatarUI(p, avatarSize, avatarSize)}
+                </div>
+            </div>
+            <div class="${movingBorderClass} w-full rounded-t-[1.2rem] p-[1.5px] border-b-0 ${heightClass}">
+                <div class="bg-slate-900 w-full h-full rounded-t-[1.1rem] flex flex-col items-center justify-start pt-8 pb-2 px-1 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-b ${gradientBg} z-0"></div>
+                    
+                    <span class="text-[8px] font-black ${nameColor} uppercase truncate w-full text-center mt-1 z-10 px-1 drop-shadow-md shrink-0">${p.name}</span>
+<span class="text-xl font-black ${ptsColor} leading-none mt-1.5 z-10 drop-shadow-md shrink-0">${p.pts}</span>
+<span class="text-[5.5px] text-slate-400 font-bold uppercase mt-1 z-10 tracking-[0.2em] shrink-0">${medalText}</span>
+                </div>
             </div>
         </div>`;
-    };
+};
 
-    // Layout: 2nd, 1st, 3rd
-    podiumEl.innerHTML = `
-        ${getPodiumStep(top3[1], 'podium-step podium-2 moving-border-silver', 'h-[110px]', 'text-silver-400', '2ND PLACE')}
-        ${getPodiumStep(top3[0], 'podium-step podium-1 moving-border-gold', 'h-[140px]', 'text-gold-500', 'CHAMPION')}
-        ${getPodiumStep(top3[2], 'podium-step podium-3 moving-border-bronze', 'h-[90px]', 'text-bronze-400', '3RD PLACE')}
+// Layout: 2nd, 1st, 3rd (নতুন ডিজাইন অনুযায়ী উচ্চতা সেট করা হয়েছে)
+podiumEl.innerHTML = `
+        ${getPodiumStep(top3[1], 2, 'h-[120px]')}
+        ${getPodiumStep(top3[0], 1, 'h-[150px]')}
+        ${getPodiumStep(top3[2], 3, 'h-[105px]')}
     `;
+
+// আইকন লোড করার জন্য এটি যোগ করা জরুরি (Crown আইকনের জন্য)
+setTimeout(() => { lucide.createIcons(); }, 10);
 
     // Table Rendering (Starts at 4th)
     ranked.slice(3).forEach((p, i) => {
@@ -649,10 +893,30 @@ function renderProfile() {
     const container = document.getElementById('profile-container');
     const uId = localStorage.getItem('slc_user');
     
-    if(state.isAdmin && !uId) {
-        container.innerHTML = `<div class="text-center text-slate-500 mt-20 text-[10px] uppercase font-black">Admin Mode Active. Switch to Player to view profile. <button onclick="logout()" class="block w-full mt-4 py-3 bg-rose-600/20 text-rose-500 rounded-xl">Logout</button></div>`;
-        return;
-    }
+if (state.isAdmin && !uId) {
+    container.innerHTML = `
+            <div class="mb-6 text-center animate-pop-in mt-4">
+                <div class="w-16 h-16 mx-auto bg-slate-900 rounded-2xl border border-gold-500/50 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.2)] mb-3">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-gold-500"></i>
+                </div>
+                <h2 class="text-xl font-black text-white uppercase italic tracking-widest">Admin Panel</h2>
+                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Total Players: <span id="admin-total-players" class="text-gold-400 font-black">${state.players.length}</span></p>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative mb-4 animate-pop-in">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+                <input type="text" id="search-admin-player" onkeyup="searchAdminPlayers()" placeholder="Search Name or ID..." class="w-full pl-11 pr-4 py-3.5 bg-slate-900 border border-white/5 rounded-2xl text-[10px] text-white font-black outline-none focus:border-gold-500 placeholder-slate-600 uppercase tracking-widest shadow-inner transition-all">
+            </div>
+
+            <!-- Player List -->
+            <div id="admin-player-list" class="space-y-3 mb-6 animate-pop-in pb-4 max-h-[450px] overflow-y-auto custom-scrollbar pr-1"></div>
+
+            <button onclick="logout()" class="w-full py-4 bg-rose-900/20 border border-rose-500/20 rounded-2xl text-[10px] font-black uppercase text-rose-500 shadow-xl hover:bg-rose-900/40 transition-colors mt-2">Logout Admin</button>
+        `;
+    setTimeout(() => { renderAdminPlayerList(); }, 50);
+    return;
+}
 
     const p = state.currentUser;
     if(!p) return;
@@ -786,7 +1050,92 @@ async function saveProfileChanges() {
     } catch(e) { notify("Error", "x"); }
     finally { btn.innerText = "Save"; btn.disabled = false; }
 }
+// --- COUNTDOWN TIMERS ---
+function updateCountdowns() {
+    const now = new Date();
+    
+    // Calculate Next Week (Saturday 00:00:00)
+    let day = now.getDay();
+    let daysUntilSat = (6 - day + 7) % 7;
+    // If it's currently Saturday but time has passed midnight, next Saturday is in 7 days
+    if (daysUntilSat === 0 && (now.getHours() > 0 || now.getMinutes() > 0 || now.getSeconds() > 0)) {
+        daysUntilSat = 7;
+    }
+    let nextSat = new Date(now);
+    nextSat.setDate(now.getDate() + daysUntilSat);
+    nextSat.setHours(0, 0, 0, 0);
+    let diffWeek = nextSat - now;
+    
+    // Calculate Next Month (1st of next month 00:00:00)
+    let nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    let diffMonth = nextMonth - now;
+    
+    // Format Time Function
+    const formatTime = (ms) => {
+        let totalSec = Math.floor(ms / 1000);
+        let d = Math.floor(totalSec / (3600 * 24));
+        let h = Math.floor((totalSec % (3600 * 24)) / 3600);
+        let m = Math.floor((totalSec % 3600) / 60);
+        let s = totalSec % 60;
+        return `${d}d ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+    };
+    
+    // Update DOM
+    const wTimer = document.getElementById('weekly-timer');
+    const mTimer = document.getElementById('monthly-timer');
+    if (wTimer) wTimer.innerText = formatTime(diffWeek);
+    if (mTimer) mTimer.innerText = formatTime(diffMonth);
+}
+// --- ADMIN PLAYER MANAGEMENT SYSTEM ---
+window.renderAdminPlayerList = function(query = '') {
+    const list = document.getElementById('admin-player-list');
+    const totalEl = document.getElementById('admin-total-players');
+    if (!list) return;
+    
+    // নতুন প্লেয়ার সবার উপরে দেখাবে
+    let filtered = [...state.players].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    
+    // সার্চ ফিল্টার
+    if (query) {
+        const q = query.toLowerCase();
+        filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q));
+    }
+    
+    if (totalEl) totalEl.innerText = filtered.length;
+    list.innerHTML = '';
+    
+    if (filtered.length === 0) {
+        list.innerHTML = `<p class="text-center text-[10px] text-slate-600 uppercase font-black py-4 border border-dashed border-white/10 rounded-2xl">No players found</p>`;
+        return;
+    }
+    
+    filtered.forEach((p, index) => {
+        list.innerHTML += `
+        <div class="bg-slate-900 p-3 rounded-2xl border border-white/5 flex items-center justify-between hover:border-gold-500/30 transition-colors">
+            <div class="flex items-center gap-3 w-[75%]">
+                <div class="text-[9px] font-black text-slate-600 w-4 text-center">${index+1}</div>
+                ${getAvatarUI({avatar:p.avatar, name:p.name}, "w-8", "h-8")}
+                <div class="overflow-hidden w-full">
+                    <p class="text-[10px] font-black text-white uppercase truncate">${p.name}</p>
+                    <p class="text-[7px] text-gold-400 font-bold tracking-widest uppercase mt-0.5">${p.id}</p>
+                </div>
+            </div>
+            <button onclick="copyToClipboard('${p.id}')" class="p-2 bg-white/5 border border-white/5 rounded-xl hover:bg-gold-500/20 hover:text-gold-400 active:scale-95 transition-all group shrink-0">
+                <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-400 group-hover:text-gold-400 transition-colors"></i>
+            </button>
+        </div>`;
+    });
+    lucide.createIcons();
+};
 
+window.searchAdminPlayers = function() {
+    const input = document.getElementById('search-admin-player');
+    if (input) renderAdminPlayerList(input.value);
+};
+
+// Start Timers globally
+setInterval(updateCountdowns, 1000);
+updateCountdowns();
 // Init
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
