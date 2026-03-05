@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,7 +23,7 @@
     </script>
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.0.0">
 </head>
 <body class="h-[100dvh] w-screen bg-slate-950 text-slate-200 overflow-hidden" id="body-main">
 
@@ -248,18 +249,46 @@
                 </div>
             </li>
             
-            <!-- Rule 5: Verification -->
-            <li class="flex items-start gap-3 bg-slate-950/40 p-3 rounded-xl border border-white/5 hover:border-slate-300/30 transition-colors">
-                <div class="bg-slate-700/30 p-1.5 rounded-lg shrink-0 border border-slate-500/30">
-                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-300"></i>
-                </div>
-                <div>
-                    <span class="text-[9px] font-black text-white uppercase tracking-widest block mb-1">Result Verification</span>
-                    <p class="text-[8px] text-slate-400 font-semibold leading-relaxed">Your <span class="text-white">Secret Matrix ID</span> is strictly required to submit and verify final match scores.</p>
-                </div>
-            </li>
-        </ul>
+<!-- Rule 5: Verification -->
+<li class="flex items-start gap-3 bg-slate-950/40 p-3 rounded-xl border border-white/5 hover:border-slate-300/30 transition-colors">
+    <div class="bg-slate-700/30 p-1.5 rounded-lg shrink-0 border border-slate-500/30">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-300"></i>
     </div>
+    <div>
+        <span class="text-[9px] font-black text-white uppercase tracking-widest block mb-1">Result Verification</span>
+        <p class="text-[8px] text-slate-400 font-semibold leading-relaxed">Your <span class="text-white">Secret Matrix ID</span> is strictly required to submit and verify final match scores.</p>
+    </div>
+</li>
+
+<!-- NEW RULE 6: MATCH SETTINGS -->
+<li class="flex items-start gap-3 bg-slate-950/40 p-3 rounded-xl border border-white/5 hover:border-cyan-500/30 transition-colors">
+    <div class="bg-cyan-500/10 p-1.5 rounded-lg shrink-0 border border-cyan-500/20">
+        <i data-lucide="settings-2" class="w-3.5 h-3.5 text-cyan-400"></i>
+    </div>
+    <div>
+        <span class="text-[9px] font-black text-white uppercase tracking-widest block mb-1">Match Settings</span>
+        <p class="text-[8px] text-slate-400 font-semibold leading-relaxed">
+            Time: <span class="text-cyan-400 font-black">8 Mins</span> &nbsp;&bull;&nbsp;
+            Condition: <span class="text-white font-black">Normal</span> &nbsp;&bull;&nbsp;
+            ET & Penalty: <span class="text-rose-500 font-black">OFF</span>
+        </p>
+    </div>
+</li>
+
+<!-- NEW RULE 7: WEEKLY STAR BONUS -->
+<li class="flex items-start gap-3 bg-slate-950/40 p-3 rounded-xl border border-white/5 hover:border-gold-500/30 transition-colors">
+    <div class="bg-gold-500/10 p-1.5 rounded-lg shrink-0 border border-gold-500/20">
+        <i data-lucide="star" class="w-3.5 h-3.5 text-gold-400 fill-gold-400"></i>
+    </div>
+    <div>
+        <span class="text-[9px] font-black text-white uppercase tracking-widest block mb-1">Weekly Star Bonus</span>
+        <p class="text-[8px] text-slate-400 font-semibold leading-relaxed">
+            The Weekly Winner receives <span class="text-gold-400 font-black">1 Star</span> at the end of the week, adding <span class="text-gold-400 font-black">+10 PTS</span> directly to their Monthly Matrix.
+        </p>
+    </div>
+</li>
+</ul>
+</div>
 </div>
             </section>
 
@@ -333,12 +362,20 @@
             <div id="list-p2" class="overflow-y-auto custom-scrollbar p-2 space-y-1"></div>
         </div>
     </div>
-    <input type="hidden" id="match-p2" value="">
-    
+<input type="hidden" id="match-p2" value="">
+
 </div>
 
-                                <button onclick="createMatch()" id="btn-create-match" class="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all mt-2">Generate Match ID</button>
-                            </div>
+<!-- NEW WARNING MESSAGE -->
+<div class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-3 mt-4 mb-2 flex items-start gap-2 shadow-[0_0_10px_rgba(244,63,94,0.15)] animate-pulse-slow">
+    <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 shrink-0 mt-0.5"></i>
+    <p class="text-[8.5px] text-rose-500 font-black uppercase tracking-widest leading-relaxed">
+        Warning: You must take permission from your opponent before creating a match!
+    </p>
+</div>
+
+<button onclick="createMatch()" id="btn-create-match" class="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all mt-2">Generate Match ID</button>
+</div>
                         </div>
                     </div>
 
@@ -593,6 +630,6 @@
     <!-- Firebase SDK (Compat version for Vanilla JS) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=1.0.0"></script>
 </body>
 </html>
